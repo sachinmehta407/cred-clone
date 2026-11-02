@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -330,7 +331,7 @@ const TIMELINE_DATA = [
     installmentNumber: 4,
     date: "2nd Nov 2026",
     month: 22,
-    type: "pending",
+    type: "paid",
     emi: "₹6,550.00",
     charges: "₹0.00",
     amount: "₹6,550.00",
@@ -375,13 +376,17 @@ const TIMELINE_DATA = [
     date: "2nd Jul 2026",
     type: "overdue",
     amount: "₹21,949.49",
-    totalDues: "₹17,197.49",
+    totalDues: "₹16,669.49",
     charges: "₹10,560.00",
     emi: "₹11,389.49",
     waiver: {
-      rate: "45%",
-      amount: "₹4,752.00",
-      info: "Pay immediately before this offer expires. Last date: 10 Nov 2026",
+      rate: "50%",
+      amount: "₹5,280.00",
+      info: "Pay immediately before this offer expires. Last date: 05 Nov 2026",
+    },
+    emiPlan: {
+      count: 3,
+      installment: "₹5,556.50",
     },
   },
 
@@ -521,6 +526,7 @@ const TIMELINE_DATA = [
 
 const PaytmLoanScreen = ({ navigation }) => {
   const [expandedMonth, setExpandedMonth] = useState(null);
+  const [paymentPlan, setPaymentPlan] = useState("full"); // 'full' | 'emi3'
 
   const toggleExpanded = (month) => {
     setExpandedMonth(expandedMonth === month ? null : month);
@@ -534,20 +540,17 @@ const PaytmLoanScreen = ({ navigation }) => {
       return (
         <>
           <View style={styles.labelWithIcon}>
-            <Ionicons name="layers-outline" size={14} color="#666" />
-            <Text style={titleStyle}>
+            <Ionicons name="layers-outline" size={13} color="#666" />
+            <Text style={titleStyle} numberOfLines={1}>
               Installment{' '}
               <Text style={styles.installmentNumberBold}>{item.installmentNumber}</Text>
+              <Text style={styles.installmentMeta}> · Mo {item.month}</Text>
             </Text>
           </View>
           <View style={styles.labelWithIcon}>
-            <Ionicons name="calendar-outline" size={12} color="#999" />
-            <Text style={dateStyle}>{item.date}</Text>
+            <Ionicons name="calendar-outline" size={11} color="#999" />
+            <Text style={dateStyle} numberOfLines={1}>{item.date}</Text>
           </View>
-          <Text style={styles.installmentText}>
-            Month{' '}
-            <Text style={styles.installmentNumberBold}>{item.month}</Text>
-          </Text>
         </>
       );
     }
@@ -563,13 +566,119 @@ const PaytmLoanScreen = ({ navigation }) => {
     );
   };
 
+  const renderInstallmentCard = (item, index, variant) => {
+    const isPending = variant === "pending";
+    const isExpanded = expandedMonth === item.month;
+    const canExpand = item.emi != null || item.balanceAfterPayment != null;
+    const statusColor = isPending ? "#d97706" : "#059669";
+    const statusIcon = isPending ? "hourglass-outline" : "checkmark-circle";
+    const statusLabel = isPending ? "pending" : "paid";
+
+    return (
+      <View
+        key={`${item.month}-${index}`}
+        style={[
+          styles.installmentCard,
+          isPending ? styles.installmentCardPending : styles.installmentCardPaid,
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.installmentCardHeader}
+          onPress={() => canExpand && toggleExpanded(item.month)}
+          activeOpacity={canExpand ? 0.75 : 1}
+        >
+          <View
+            style={[
+              styles.installmentStatusDot,
+              isPending
+                ? styles.installmentStatusDotPending
+                : styles.installmentStatusDotPaid,
+            ]}
+          >
+            <Ionicons
+              name={isPending ? "time" : "checkmark"}
+              size={11}
+              color="#fff"
+            />
+          </View>
+
+          <View style={styles.installmentCardMain}>
+            <View style={styles.installmentCardTop}>
+              <View style={styles.installmentCardLeft}>
+                {renderTimelineLabels(item)}
+              </View>
+              <View
+                style={[
+                  styles.installmentStatusBadge,
+                  isPending
+                    ? styles.installmentStatusBadgePending
+                    : styles.installmentStatusBadgePaid,
+                ]}
+              >
+                <Ionicons name={statusIcon} size={11} color={statusColor} />
+                <Text
+                  style={[
+                    styles.installmentStatusText,
+                    { color: statusColor },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {statusLabel}
+                </Text>
+                {canExpand && (
+                  <Ionicons
+                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                    size={12}
+                    color={statusColor}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={styles.installmentAmountRow}>
+              <Text style={styles.installmentAmountLabel}>EMI amount</Text>
+              <Text
+                style={[
+                  styles.installmentAmountValue,
+                  { color: statusColor },
+                ]}
+                numberOfLines={1}
+              >
+                {item.amount}
+              </Text>
+            </View>
+
+            {/* {item.balanceAfterPayment != null && (
+              <View style={styles.installmentBalanceRow}>
+                <Text style={styles.installmentBalanceLabel}>
+                  Balance after payment
+                </Text>
+                <Text style={styles.installmentBalanceValue} numberOfLines={1}>
+                  {item.balanceAfterPayment}
+                </Text>
+              </View>
+            )} */}
+          </View>
+        </TouchableOpacity>
+
+        {isExpanded && canExpand && (
+          <View style={styles.installmentCardDetails}>
+            {renderRepaymentDetails(item)}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderDetailRow = (icon, iconColor, label, value, labelStyle, valueStyle) => (
     <View style={styles.repaymentRow}>
       <View style={styles.repaymentLabelRow}>
-        <Ionicons name={icon} size={14} color={iconColor} />
-        <Text style={labelStyle}>{label}</Text>
+        <Ionicons name={icon} size={13} color={iconColor} />
+        <Text style={labelStyle} numberOfLines={1}>{label}</Text>
       </View>
-      <Text style={valueStyle}>{value}</Text>
+      <Text style={[valueStyle, styles.repaymentValueShrink]} numberOfLines={1}>
+        {value}
+      </Text>
     </View>
   );
 
@@ -606,17 +715,19 @@ const PaytmLoanScreen = ({ navigation }) => {
       {item.charges != null && (
         <View style={[styles.repaymentRow, styles.chargesRow]}>
           <View style={styles.repaymentLabelRow}>
-            <Ionicons name="alert-circle-outline" size={14} color="#e65100" />
+            <Ionicons name="alert-circle-outline" size={13} color="#e65100" />
             <Text style={styles.chargesLabel}>Charges</Text>
           </View>
-          <Text style={styles.chargesAmount}>{item.charges}</Text>
+          <Text style={styles.chargesAmount} numberOfLines={1}>
+            {item.charges}
+          </Text>
         </View>
       )}
       {item.waiver != null && (
         <View style={styles.waiverBlock}>
           <View style={[styles.repaymentRow, styles.waiverRow]}>
             <View style={styles.repaymentLabelRow}>
-              <Ionicons name="pricetag-outline" size={14} color="#047857" />
+              <Ionicons name="pricetag-outline" size={11} color="#047857" />
               <Text style={styles.waiverLabel}>
                 Charges Waiver ({item.waiver.rate})
               </Text>
@@ -625,7 +736,7 @@ const PaytmLoanScreen = ({ navigation }) => {
           </View>
           {item.waiver.info != null && (
             <View style={styles.waiverInfoRow}>
-              <Ionicons name="information-circle-outline" size={13} color="#b45309" />
+              <Ionicons name="information-circle-outline" size={11} color="#b45309" />
               <Text style={styles.waiverInfoText}>{item.waiver.info}</Text>
             </View>
           )}
@@ -637,19 +748,138 @@ const PaytmLoanScreen = ({ navigation }) => {
             <Ionicons name="wallet-outline" size={14} color="#333" />
             <Text style={styles.totalDuesLabel}>Balance After Payment</Text>
           </View>
-          <Text style={styles.totalDuesAmount}>{item.balanceAfterPayment}</Text>
+          <Text style={styles.totalDuesAmount} numberOfLines={1}>
+            {item.balanceAfterPayment}
+          </Text>
         </View>
       )}
       {(item.totalDues != null || item.amount != null) &&
         item.balanceAfterPayment == null && (
-        <View style={styles.totalDuesRow}>
+        <View
+          style={[
+            styles.totalDuesRow,
+            item.waiver != null && styles.totalDuesRowCompact,
+          ]}
+        >
           <View style={styles.repaymentLabelRow}>
-            <MaterialCommunityIcons name="cash" size={14} color="#333" />
-            <Text style={styles.totalDuesLabel}>Total Dues Remaining</Text>
+            <MaterialCommunityIcons
+              name="cash"
+              size={item.waiver != null ? 12 : 14}
+              color="#333"
+            />
+            <Text
+              style={[
+                styles.totalDuesLabel,
+                item.waiver != null && styles.totalDuesLabelCompact,
+              ]}
+            >
+              Total Dues Remaining
+            </Text>
           </View>
-          <Text style={styles.totalDuesAmount}>
+          <Text
+            style={[
+              styles.totalDuesAmount,
+              item.waiver != null && styles.totalDuesAmountCompact,
+            ]}
+            numberOfLines={1}
+          >
             {item.totalDues ?? item.amount}
           </Text>
+        </View>
+      )}
+      {item.emiPlan != null && (
+        <View style={styles.payPlanBlock}>
+          <Text style={styles.payPlanTitle}>CHOOSE PAYMENT OPTION</Text>
+          <TouchableOpacity
+            style={[
+              styles.payPlanOption,
+              paymentPlan === "full" && styles.payPlanOptionSelected,
+            ]}
+            onPress={() => setPaymentPlan("full")}
+            activeOpacity={0.8}
+          >
+            <View style={styles.payPlanOptionLeft}>
+              <Ionicons
+                name={
+                  paymentPlan === "full"
+                    ? "radio-button-on"
+                    : "radio-button-off"
+                }
+                size={14}
+                color={paymentPlan === "full" ? "#047857" : "#999"}
+              />
+              <View style={styles.payPlanOptionTextWrap}>
+                <Text style={styles.payPlanOptionTitle}>Pay in full</Text>
+                <Text style={styles.payPlanOptionSub}>
+                  clear total dues now
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.payPlanOptionAmount}>
+              {item.totalDues ?? item.amount}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.payPlanOption,
+              paymentPlan === "emi3" && styles.payPlanOptionSelected,
+            ]}
+            onPress={() => setPaymentPlan("emi3")}
+            activeOpacity={0.8}
+          >
+            <View style={styles.payPlanOptionLeft}>
+              <Ionicons
+                name={
+                  paymentPlan === "emi3"
+                    ? "radio-button-on"
+                    : "radio-button-off"
+                }
+                size={14}
+                color={paymentPlan === "emi3" ? "#047857" : "#999"}
+              />
+              <View style={styles.payPlanOptionTextWrap}>
+                <Text style={styles.payPlanOptionTitle}>
+                  Pay in {item.emiPlan.count} EMIs
+                </Text>
+                <Text style={styles.payPlanOptionSub}>
+                  {item.emiPlan.installment} × {item.emiPlan.count}{" "}
+                  installments
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.payPlanOptionAmount}>
+              {item.emiPlan.installment}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.payPlanButton}
+            onPress={() => {
+              const payAmount =
+                paymentPlan === "emi3"
+                  ? item.emiPlan.installment
+                  : item.totalDues ?? item.amount;
+              Alert.alert(
+                "Confirm payment",
+                paymentPlan === "emi3"
+                  ? `Pay first EMI of ${payAmount} now (${item.emiPlan.count} EMI plan).`
+                  : `Pay full amount of ${payAmount} now.`,
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Pay", style: "default" },
+                ]
+              );
+            }}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="flash" size={12} color="#fff" />
+            <Text style={styles.payPlanButtonText}>
+              {paymentPlan === "emi3"
+                ? `Pay ${item.emiPlan.installment}`
+                : `Pay ${item.totalDues ?? item.amount}`}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -771,65 +1001,11 @@ const PaytmLoanScreen = ({ navigation }) => {
     }
 
     if (item.type === "pending") {
-      const isExpanded = expandedMonth === item.month;
-      return (
-        <View key={`${item.month}-${index}`} style={styles.timelineRow}>
-          <View style={styles.dotWrap}>
-            <View style={[styles.dotIcon, styles.dotIconPending]}>
-              <Ionicons name="time" size={12} color="#fff" />
-            </View>
-          </View>
-          <View style={styles.timelineContent}>
-            <View style={styles.timelineRowInner}>
-              <View>
-                {renderTimelineLabels(item)}
-              </View>
-              <TouchableOpacity
-                style={styles.badgePending}
-                onPress={() => toggleExpanded(item.month)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="hourglass-outline" size={12} color="#d97706" />
-                <Text style={styles.badgePendingText}>
-                  {item.amount} pending
-                </Text>
-                {(item.emi != null || item.balanceAfterPayment != null) && (
-                  <Ionicons
-                    name={isExpanded ? "chevron-up" : "chevron-down"}
-                    size={14}
-                    color="#d97706"
-                    style={styles.pendingChevron}
-                  />
-                )}
-              </TouchableOpacity>
-            </View>
-            {isExpanded && renderRepaymentDetails(item)}
-          </View>
-        </View>
-      );
+      return renderInstallmentCard(item, index, "pending");
     }
 
     if (item.type === "paid") {
-      return (
-        <View key={`${item.month}-${index}`} style={styles.timelineRow}>
-          <View style={styles.dotWrap}>
-            <View style={[styles.dotIcon, styles.dotIconPaid]}>
-              <Ionicons name="checkmark" size={12} color="#fff" />
-            </View>
-          </View>
-          <View style={styles.timelineContent}>
-            <View style={styles.timelineRowInner}>
-              <View>
-                {renderTimelineLabels(item)}
-              </View>
-              <View style={styles.badgePaid}>
-                <Ionicons name="checkmark-circle" size={14} color="#00c853" />
-                <Text style={styles.badgePaidText}>{item.amount} paid</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      );
+      return renderInstallmentCard(item, index, "paid");
     }
 
     if (item.type === "restructured") {
@@ -1275,6 +1451,129 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 24,
   },
+  installmentCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+  installmentCardPending: {
+    backgroundColor: "#fffdf7",
+    borderColor: "#fde68a",
+  },
+  installmentCardPaid: {
+    backgroundColor: "#f7fdf9",
+    borderColor: "#bbf7d0",
+  },
+  installmentCardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 12,
+    gap: 10,
+  },
+  installmentStatusDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  installmentStatusDotPending: {
+    backgroundColor: "#d97706",
+  },
+  installmentStatusDotPaid: {
+    backgroundColor: "#16a34a",
+  },
+  installmentCardMain: {
+    flex: 1,
+    minWidth: 0,
+  },
+  installmentCardTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  installmentCardLeft: {
+    flex: 1,
+    minWidth: 0,
+  },
+  installmentStatusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  installmentStatusBadgePending: {
+    backgroundColor: "#fff7ed",
+    borderColor: "#fdba74",
+  },
+  installmentStatusBadgePaid: {
+    backgroundColor: "#ecfdf5",
+    borderColor: "#86efac",
+  },
+  installmentStatusText: {
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "capitalize",
+  },
+  installmentAmountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+    gap: 8,
+  },
+  installmentAmountLabel: {
+    fontSize: 11,
+    color: "#6b7280",
+    fontWeight: "500",
+  },
+  installmentAmountValue: {
+    fontSize: 13,
+    fontWeight: "700",
+    flexShrink: 1,
+    textAlign: "right",
+  },
+  installmentBalanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.08)",
+    gap: 8,
+  },
+  installmentBalanceLabel: {
+    fontSize: 11,
+    color: "#6b7280",
+    fontWeight: "500",
+    flexShrink: 1,
+  },
+  installmentBalanceValue: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#111827",
+    flexShrink: 1,
+    textAlign: "right",
+  },
+  installmentCardDetails: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.08)",
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+  },
+  installmentMeta: {
+    fontSize: 12,
+    color: "#9ca3af",
+    fontWeight: "500",
+  },
   timelineRowComplete: {
     padding: 16,
     borderRadius: 12,
@@ -1401,24 +1700,28 @@ const styles = StyleSheet.create({
   timelineMonth: {
     fontWeight: "600",
     color: "#374151",
-    fontSize: 16,
-    marginBottom: 4,
+    fontSize: 13,
+    marginBottom: 2,
+    flexShrink: 1,
   },
   timelineMonthBold: {
     fontWeight: "700",
     color: "#1a1a1a",
-    fontSize: 18,
-    marginBottom: 4,
+    fontSize: 15,
+    marginBottom: 2,
+    flexShrink: 1,
   },
   timelineDate: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6b7280",
     fontWeight: "500",
+    flexShrink: 1,
   },
   timelineDateMuted: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#9ca3af",
     fontWeight: "500",
+    flexShrink: 1,
   },
   dueInText: {
     fontSize: 13,
@@ -1462,14 +1765,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     backgroundColor: "#fff7ed",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#fdba74",
   },
   badgePendingText: {
     fontWeight: "600",
     color: "#d97706",
-    fontSize: 16,
+    fontSize: 11,
   },
   badgeOverdue: {
     flexDirection: "row",
@@ -1490,14 +1795,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     backgroundColor: "rgba(16, 185, 129, 0.1)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#86efac",
   },
   badgePaidText: {
     fontWeight: "600",
     color: "#059669",
-    fontSize: 16,
+    fontSize: 11,
   },
   badgeRestructured: {
     flexDirection: "row",
@@ -1532,36 +1839,45 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   expandableDetails: {
-    marginTop: 16,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 12,
-    padding: 5,
+    marginTop: 8,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 6,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    borderColor: "#f3f4f6",
   },
   repaymentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    alignItems: "center",
+    paddingVertical: 7,
+    paddingHorizontal: 10,
     backgroundColor: "#fff7ed",
     borderRadius: 6,
     borderLeftWidth: 3,
     borderLeftColor: "#d97706",
-    marginBottom: 10,
+    marginBottom: 6,
+    gap: 8,
   },
   repaymentLabel: {
     color: "#6b7280",
-    fontSize: 14,
+    fontSize: 12,
+    flexShrink: 1,
   },
   repaymentAmount: {
     fontWeight: "600",
     color: "#d97706",
+    fontSize: 12,
   },
   repaymentAmountBold: {
     fontWeight: "700",
     color: "#d97706",
-    fontSize: 14,
+    fontSize: 12,
+  },
+  repaymentValueShrink: {
+    flexShrink: 1,
+    textAlign: "right",
+    maxWidth: "48%",
   },
   chargesRow: {
     backgroundColor: "rgba(220, 38, 38, 0.15)",
@@ -1569,63 +1885,153 @@ const styles = StyleSheet.create({
   },
   chargesLabel: {
     color: "#dc2626",
-    fontSize: 14,
+    fontSize: 12,
   },
   chargesAmount: {
     fontWeight: "600",
     color: "#dc2626",
+    fontSize: 12,
+    flexShrink: 1,
+    textAlign: "right",
+    maxWidth: "48%",
   },
   waiverBlock: {
-    marginBottom: 10,
+    marginBottom: 6,
   },
   waiverRow: {
     backgroundColor: "rgba(16, 185, 129, 0.12)",
     borderLeftWidth: 0,
     marginBottom: 0,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
   },
   waiverLabel: {
     color: "#047857",
-    fontSize: 14,
+    fontSize: 11,
   },
   waiverAmount: {
     fontWeight: "600",
     color: "#047857",
+    fontSize: 11,
   },
   waiverInfoRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 6,
-    marginTop: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    gap: 4,
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     backgroundColor: "#fff7ed",
-    borderRadius: 6,
+    borderRadius: 5,
   },
   waiverInfoText: {
     flex: 1,
     color: "#b45309",
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 13,
   },
   totalDuesRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 12,
+    alignItems: "center",
+    padding: 10,
     backgroundColor: "#fff7ed",
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(16, 185, 129, 0.2)",
-    marginTop: 8,
+    marginTop: 6,
+    gap: 8,
+  },
+  totalDuesRowCompact: {
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    marginTop: 6,
+    borderRadius: 6,
   },
   totalDuesLabel: {
     fontWeight: "600",
     color: "#374151",
-    fontSize: 16,
+    fontSize: 12,
+    flexShrink: 1,
+  },
+  totalDuesLabelCompact: {
+    fontSize: 11,
   },
   totalDuesAmount: {
     fontWeight: "700",
     color: "#d97706",
-    fontSize: 16,
+    fontSize: 13,
+    flexShrink: 1,
+    textAlign: "right",
+  },
+  totalDuesAmountCompact: {
+    fontSize: 12,
+  },
+  payPlanBlock: {
+    marginTop: 8,
+  },
+  payPlanTitle: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#6b7280",
+    letterSpacing: 0.8,
+    marginBottom: 5,
+  },
+  payPlanOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 7,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    marginBottom: 5,
+    backgroundColor: "#fff",
+  },
+  payPlanOptionSelected: {
+    borderColor: "#047857",
+    backgroundColor: "#ecfdf5",
+  },
+  payPlanOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+    paddingRight: 6,
+  },
+  payPlanOptionTextWrap: {
+    flex: 1,
+  },
+  payPlanOptionTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#1a1a1a",
+  },
+  payPlanOptionSub: {
+    fontSize: 9,
+    color: "#6b7280",
+    marginTop: 1,
+  },
+  payPlanOptionAmount: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#1a1a1a",
+  },
+  payPlanButton: {
+    marginTop: 2,
+    backgroundColor: "#047857",
+    borderRadius: 6,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 4,
+  },
+  payPlanButtonText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
   },
   timelineFooter: {
     alignItems: "center",

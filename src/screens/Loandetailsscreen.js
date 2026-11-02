@@ -52,9 +52,12 @@ const TOTAL_EMI_PAID = PAID_EMI_COUNT * EMI_AMOUNT; // ₹1,02,420.00
 // CRED CASH one-time settlement (matches EMI Details)
 const PRINCIPAL_LEFT = 10243;
 const OVERDUE_CHARGES = 19879.75;
-const WAIVER_AMOUNT = 9939.88; // 50% waiver
-const REMAINING_CHARGES = 9939.88;
-const OVERDUE_PAY_AMOUNT = 20182.88; // final settlement
+const WAIVER_RATE = 0.5; // 50% waiver
+const WAIVER_AMOUNT = Number((OVERDUE_CHARGES * WAIVER_RATE).toFixed(2)); // ₹9,939.88
+const REMAINING_CHARGES = WAIVER_AMOUNT; // exact 50% split → ₹9,939.88
+const OVERDUE_PAY_AMOUNT = Number(
+  (PRINCIPAL_LEFT + REMAINING_CHARGES).toFixed(2)
+); // ₹20,182.88 final settlement
 const OFFER_DEADLINE = '02 Nov 2026';
 // Amount paid shown = total EMI paid − principal left
 const AMOUNT_PAID = TOTAL_EMI_PAID - PRINCIPAL_LEFT;
@@ -597,7 +600,7 @@ const LoanDetailsScreen = ({ navigation, route }) => {
               </View>
               <View style={styles.paySheetForeclosureInfo}>
                 <Text style={styles.paySheetForeclosureLabel}>LOAN FORECLOSURE</Text>
-                <Text style={styles.paySheetForeclosureAmount}>₹{payAmount}</Text>
+                <Text style={styles.paySheetForeclosureAmount}>₹{formatAmount(7058.95)}</Text>
               </View>
             </View>
 
@@ -645,7 +648,7 @@ const LoanDetailsScreen = ({ navigation, route }) => {
               <View style={styles.paySheetNetPayable}>
                 <Text style={styles.paySheetNetLabel}>net payable</Text>
                 <View style={styles.paySheetNetRow}>
-                  <Text style={styles.paySheetNetAmount}>₹{payAmount}</Text>
+                  <Text style={styles.paySheetNetAmount}>₹{formatAmount(7058.95)}</Text>
                   <Ionicons name="chevron-forward" size={18} color="#666" />
                 </View>
               </View>

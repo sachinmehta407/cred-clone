@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,12 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 const PRINCIPAL_LEFT = 10243;
 const OVERDUE_CHARGES = 19879.75;
 const WAIVER_PERCENT = 50;
-const WAIVER_AMOUNT = 9939.88; // 50% of overdue charges
-const REMAINING_CHARGES = 9939.88;
-const SETTLEMENT_TOTAL = 20182.88; // principal + remaining charges
+const WAIVER_AMOUNT = Number((OVERDUE_CHARGES * (WAIVER_PERCENT / 100)).toFixed(2)); // ₹9,939.88
+const REMAINING_CHARGES = WAIVER_AMOUNT; // exact 50% split → ₹9,939.88
+const SETTLEMENT_TOTAL = Number((PRINCIPAL_LEFT + REMAINING_CHARGES).toFixed(2)); // ₹20,182.88
 const OVERDUE_EMI_COUNT = 2;
+const EMI_PLAN_COUNT = 3;
+const EMI_INSTALLMENT = Number((SETTLEMENT_TOTAL / EMI_PLAN_COUNT).toFixed(2)); // ₹6,727.63
 const OFFER_DEADLINE = "02 Nov 2026";
 const formatAmount = (value) =>
   value.toLocaleString('en-IN', {
@@ -25,15 +27,21 @@ const formatAmount = (value) =>
 const EMI_PAY_AMOUNT = formatAmount(SETTLEMENT_TOTAL);
 
 const EMIDetailsScreen = ({ navigation }) => {
+  const [paymentPlan, setPaymentPlan] = useState('full'); // 'full' | 'emi3'
+  const selectedPayAmount =
+    paymentPlan === 'emi3'
+      ? formatAmount(EMI_INSTALLMENT)
+      : EMI_PAY_AMOUNT;
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation?.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -41,38 +49,39 @@ const EMIDetailsScreen = ({ navigation }) => {
         {/* Needs Attention Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>NEEDS ATTENTION</Text>
-          
+
           <View style={styles.needsCard}>
-            {/* Top beige section */}
             <View style={styles.needsCardTop}>
               <View style={styles.needsCardHeader}>
-                <View>
+                <View style={styles.needsCardHeaderText}>
                   <Text style={styles.emiTitle}>
-                    EMI <Text style={styles.dueTitleOrange}>Overdue 2 EMI(s)</Text>
+                    EMI{' '}
+                    <Text style={styles.dueTitleOrange}>Overdue 2 EMI(s)</Text>
                   </Text>
                   <Text style={styles.emiSubtitle}>
-                    your autopay setup will take care of{'\n'}
-                    paying your EMI on the due date
+                    autopay will pay your EMI on the due date
                   </Text>
                 </View>
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="calendar-clock" size={32} color="#ff9500" />
+                  <MaterialCommunityIcons
+                    name="calendar-clock"
+                    size={22}
+                    color="#ff9500"
+                  />
                 </View>
               </View>
             </View>
 
-            {/* Bottom white section */}
             <View style={styles.needsCardBottom}>
               <View style={styles.offerBadge}>
-                <Ionicons name="gift-outline" size={14} color="#fff" />
+                <Ionicons name="gift-outline" size={11} color="#fff" />
                 <Text style={styles.offerBadgeText}>
-                  SPECIAL ONE-TIME SETTLEMENT · {WAIVER_PERCENT}% WAIVER
+                  ONE-TIME SETTLEMENT · {WAIVER_PERCENT}% WAIVER
                 </Text>
               </View>
               <Text style={styles.amountLabel}>final settlement amount</Text>
               <Text style={styles.amount}>₹{EMI_PAY_AMOUNT}</Text>
 
-              {/* Settlement calculation breakdown */}
               <View style={styles.breakdownBox}>
                 <Text style={styles.breakdownTitle}>SETTLEMENT BREAKDOWN</Text>
                 <Text style={styles.breakdownHint}>
@@ -83,7 +92,7 @@ const EMIDetailsScreen = ({ navigation }) => {
                   <View style={styles.breakdownLabelRow}>
                     <MaterialCommunityIcons
                       name="cash-plus"
-                      size={16}
+                      size={13}
                       color="#2e7d32"
                     />
                     <View style={styles.breakdownLabelWrap}>
@@ -106,7 +115,7 @@ const EMIDetailsScreen = ({ navigation }) => {
 
                 <View style={styles.breakdownRow}>
                   <View style={styles.breakdownLabelRow}>
-                    <Ionicons name="alert-circle" size={16} color="#ff9500" />
+                    <Ionicons name="alert-circle" size={13} color="#ff9500" />
                     <View style={styles.breakdownLabelWrap}>
                       <Text style={styles.breakdownLabel}>Overdue charges</Text>
                       <Text style={styles.breakdownSub}>
@@ -125,7 +134,7 @@ const EMIDetailsScreen = ({ navigation }) => {
 
                 <View style={styles.breakdownRow}>
                   <View style={styles.breakdownLabelRow}>
-                    <Ionicons name="pricetag" size={16} color="#2e7d32" />
+                    <Ionicons name="pricetag" size={13} color="#2e7d32" />
                     <View style={styles.breakdownLabelWrap}>
                       <Text style={styles.breakdownLabel}>
                         {WAIVER_PERCENT}% waiver on overdue charges
@@ -146,7 +155,7 @@ const EMIDetailsScreen = ({ navigation }) => {
 
                 <View style={styles.breakdownRow}>
                   <View style={styles.breakdownLabelRow}>
-                    <Ionicons name="receipt-outline" size={16} color="#ff9500" />
+                    <Ionicons name="receipt-outline" size={13} color="#ff9500" />
                     <View style={styles.breakdownLabelWrap}>
                       <Text style={styles.breakdownLabel}>
                         Remaining overdue charges
@@ -165,7 +174,7 @@ const EMIDetailsScreen = ({ navigation }) => {
 
                 <View style={styles.breakdownRow}>
                   <View style={styles.breakdownLabelRow}>
-                    <Ionicons name="card-outline" size={16} color="#c62828" />
+                    <Ionicons name="card-outline" size={13} color="#c62828" />
                     <View style={styles.breakdownLabelWrap}>
                       <Text style={styles.breakdownLabelTotal}>
                         Total final settlement
@@ -184,27 +193,88 @@ const EMIDetailsScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.finalOfferBox}>
-                <Ionicons name="warning" size={18} color="#c62828" />
+                <Ionicons name="warning" size={14} color="#c62828" />
                 <Text style={styles.finalOfferText}>
-                  This is the final and last offer. Pay before{' '}
+                  Final offer. Pay before{' '}
                   <Text style={styles.finalOfferDate}>{OFFER_DEADLINE}</Text> to
                   avoid a lined up account.
                 </Text>
               </View>
 
               <View style={styles.warningRow}>
-                <Ionicons name="alert-circle" size={14} color="#ff6b35" />
+                <Ionicons name="alert-circle" size={12} color="#ff6b35" />
                 <Text style={styles.dueTitleOrange}>
                   clear ₹{EMI_PAY_AMOUNT} via CRED app to close your account
-                  successfully
                 </Text>
               </View>
               <View style={styles.accountRow}>
-                <Ionicons name="person-outline" size={14} color="#666" />
+                <Ionicons name="person-outline" size={12} color="#666" />
                 <Text style={styles.accountDetails}>
                   Sandeep singh 103680 • EMI 22 of 24
                 </Text>
               </View>
+
+              <Text style={styles.planTitle}>CHOOSE PAYMENT OPTION</Text>
+              <TouchableOpacity
+                style={[
+                  styles.planOption,
+                  paymentPlan === 'full' && styles.planOptionSelected,
+                ]}
+                onPress={() => setPaymentPlan('full')}
+                activeOpacity={0.8}
+              >
+                <View style={styles.planOptionLeft}>
+                  <Ionicons
+                    name={
+                      paymentPlan === 'full'
+                        ? 'radio-button-on'
+                        : 'radio-button-off'
+                    }
+                    size={16}
+                    color={paymentPlan === 'full' ? '#2e7d32' : '#999'}
+                  />
+                  <View style={styles.planOptionTextWrap}>
+                    <Text style={styles.planOptionTitle}>Pay in full</Text>
+                    <Text style={styles.planOptionSub}>
+                      clear full settlement now
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.planOptionAmount}>₹{EMI_PAY_AMOUNT}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.planOption,
+                  paymentPlan === 'emi3' && styles.planOptionSelected,
+                ]}
+                onPress={() => setPaymentPlan('emi3')}
+                activeOpacity={0.8}
+              >
+                <View style={styles.planOptionLeft}>
+                  <Ionicons
+                    name={
+                      paymentPlan === 'emi3'
+                        ? 'radio-button-on'
+                        : 'radio-button-off'
+                    }
+                    size={16}
+                    color={paymentPlan === 'emi3' ? '#2e7d32' : '#999'}
+                  />
+                  <View style={styles.planOptionTextWrap}>
+                    <Text style={styles.planOptionTitle}>
+                      Pay in {EMI_PLAN_COUNT} EMIs
+                    </Text>
+                    <Text style={styles.planOptionSub}>
+                      ₹{formatAmount(7058.95)} × {EMI_PLAN_COUNT}{' '}
+                      installments
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.planOptionAmount}>
+                  ₹{formatAmount(7058.95)}
+                </Text>
+              </TouchableOpacity>
 
               <View style={styles.buttonRow}>
                 <TouchableOpacity
@@ -212,20 +282,28 @@ const EMIDetailsScreen = ({ navigation }) => {
                   onPress={() =>
                     navigation?.navigate('LoanDetails', {
                       openPayModal: true,
-                      payAmount: EMI_PAY_AMOUNT,
+                      payAmount: selectedPayAmount,
                     })
                   }
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="flash" size={16} color="#1a1a1a" />
-                  <Text style={styles.payNowText}>Pay now</Text>
+                  <Ionicons name="flash" size={13} color="#1a1a1a" />
+                  <Text style={styles.payNowText}>
+                    {paymentPlan === 'emi3'
+                      ? `Pay ₹${formatAmount(7058.95)}`
+                      : 'Pay now'}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.viewDetailsButton}
                   onPress={() => navigation?.navigate('LoanDetails')}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="document-text-outline" size={16} color="#fff" />
+                  <Ionicons
+                    name="document-text-outline"
+                    size={13}
+                    color="#fff"
+                  />
                   <Text style={styles.viewDetailsText}>View details</Text>
                 </TouchableOpacity>
               </View>
@@ -236,27 +314,29 @@ const EMIDetailsScreen = ({ navigation }) => {
         {/* Your Active Draws Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>YOUR ACTIVE DRAWS</Text>
-          
+
           <View style={styles.activeDrawCard}>
-            {/* Circular Progress (View-based to avoid native SVG issues on Android) */}
             <View style={styles.progressContainer}>
               <View style={styles.progressRingOuter} />
               <View style={styles.progressCenter}>
-                <MaterialCommunityIcons name="shield-check" size={32} color="#00ff88" />
+                <MaterialCommunityIcons
+                  name="shield-check"
+                  size={22}
+                  color="#00ff88"
+                />
                 <Text style={styles.progressPercentage}>83%</Text>
                 <Text style={styles.progressLabel}>paid</Text>
               </View>
             </View>
 
-            {/* Draw Info */}
             <View style={styles.drawInfo}>
               <View style={styles.onTrackRow}>
-                <Ionicons name="checkmark-circle" size={14} color="#00ff88" />
+                <Ionicons name="checkmark-circle" size={12} color="#00ff88" />
                 <Text style={styles.onTrackLabel}>ON TRACK</Text>
               </View>
               <Text style={styles.drawName}>Sandeep singh 103680</Text>
               <View style={styles.monthsLeftRow}>
-                <Ionicons name="time-outline" size={14} color="#666" />
+                <Ionicons name="time-outline" size={12} color="#666" />
                 <Text style={styles.drawSubtitle}>2 months EMI left</Text>
               </View>
             </View>
@@ -267,7 +347,7 @@ const EMIDetailsScreen = ({ navigation }) => {
         <View style={styles.benefitsSection}>
           <MaterialCommunityIcons
             name="gift-outline"
-            size={36}
+            size={24}
             color="#fff"
             style={styles.benefitsIcon}
           />
@@ -278,8 +358,7 @@ const EMIDetailsScreen = ({ navigation }) => {
           <View style={styles.benefitsIndicator} />
         </View>
 
-        {/* Bottom spacing */}
-        <View style={{ height: 100 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
@@ -291,123 +370,130 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
   },
   header: {
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingTop: 42,
+    paddingHorizontal: 14,
+    paddingBottom: 8,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
   },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#666',
-    letterSpacing: 1.5,
+    paddingHorizontal: 14,
     marginBottom: 16,
   },
+  sectionTitle: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#666',
+    letterSpacing: 1.2,
+    marginBottom: 8,
+  },
   needsCard: {
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   needsCardTop: {
     backgroundColor: '#c9b5a0',
-    padding: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   needsCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  needsCardHeaderText: {
+    flex: 1,
+    minWidth: 0,
   },
   emiTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '600',
     color: '#1a1a1a',
-    marginBottom: 8,
+    marginBottom: 3,
   },
   dueTitleOrange: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11,
     color: '#ff6b35',
   },
   warningRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 6,
-    marginBottom: 10,
+    gap: 5,
+    marginBottom: 6,
   },
   emiSubtitle: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#4a4a4a',
-    lineHeight: 18,
+    lineHeight: 15,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: 'rgba(255, 149, 0, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   needsCardBottom: {
     backgroundColor: '#e8e8e8',
-    padding: 20,
+    padding: 12,
   },
   offerBadge: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     backgroundColor: '#2e7d32',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginBottom: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    marginBottom: 6,
   },
   offerBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: '#fff',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   amountLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: '#888',
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 0.6,
+    marginBottom: 2,
   },
   amount: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1a1a1a',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   finalOfferBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#ffebee',
     borderWidth: 1,
     borderColor: '#ef9a9a',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 8,
   },
   finalOfferText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 11,
     color: '#b71c1c',
-    lineHeight: 18,
+    lineHeight: 15,
     fontWeight: '500',
   },
   finalOfferDate: {
@@ -416,154 +502,211 @@ const styles = StyleSheet.create({
   },
   breakdownBox: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 14,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#ddd',
   },
   breakdownTitle: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '700',
     color: '#666',
-    letterSpacing: 1.2,
-    marginBottom: 4,
+    letterSpacing: 0.8,
+    marginBottom: 2,
   },
   breakdownHint: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#888',
-    marginBottom: 14,
+    marginBottom: 8,
   },
   breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 6,
   },
   breakdownLabelRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 6,
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 4,
+    minWidth: 0,
   },
   breakdownLabelWrap: {
     flex: 1,
+    minWidth: 0,
   },
   breakdownLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
     color: '#1a1a1a',
   },
   breakdownLabelTotal: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#1a1a1a',
   },
   breakdownSub: {
-    fontSize: 11,
+    fontSize: 9,
     color: '#888',
-    marginTop: 2,
+    marginTop: 1,
   },
   breakdownValueGreen: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#2e7d32',
+    flexShrink: 0,
   },
   breakdownValueOrange: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#ff9500',
+    flexShrink: 0,
   },
   breakdownPlus: {
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 1,
   },
   breakdownPlusText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
     color: '#999',
   },
   breakdownDivider: {
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: '#e0e0e0',
-    marginVertical: 10,
+    marginVertical: 6,
   },
   breakdownTotalBadge: {
     backgroundColor: '#c62828',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
   },
   breakdownTotalValue: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '700',
     color: '#fff',
   },
   accountRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 20,
+    gap: 4,
+    marginBottom: 10,
   },
   accountDetails: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#666',
+  },
+  planTitle: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#666',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  planOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    marginBottom: 6,
+    backgroundColor: '#fff',
+    gap: 6,
+  },
+  planOptionSelected: {
+    borderColor: '#2e7d32',
+    backgroundColor: '#f0fdf4',
+  },
+  planOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    minWidth: 0,
+  },
+  planOptionTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  planOptionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  planOptionSub: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 1,
+  },
+  planOptionAmount: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    flexShrink: 0,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+    marginTop: 2,
   },
   payNowButton: {
     flex: 1,
     backgroundColor: 'transparent',
-    borderWidth: 1.5,
+    borderWidth: 1.2,
     borderColor: '#1a1a1a',
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
   },
   payNowText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '600',
     color: '#1a1a1a',
   },
   viewDetailsButton: {
     flex: 1,
     backgroundColor: '#1a1a1a',
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
   },
   viewDetailsText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '600',
     color: '#fff',
   },
   activeDrawCard: {
     backgroundColor: '#252525',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 12,
+    padding: 14,
     alignItems: 'center',
   },
   progressContainer: {
-    width: 160,
-    height: 160,
+    width: 100,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 10,
   },
   progressRingOuter: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 8,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 6,
     borderColor: '#2a2a2a',
   },
   progressCenter: {
@@ -571,15 +714,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressPercentage: {
-    fontSize: 36,
+    fontSize: 22,
     fontWeight: '700',
     color: '#fff',
-    marginTop: 8,
+    marginTop: 4,
   },
   progressLabel: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#999',
-    marginTop: 4,
+    marginTop: 1,
   },
   drawInfo: {
     alignItems: 'center',
@@ -588,49 +731,49 @@ const styles = StyleSheet.create({
   onTrackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 8,
+    gap: 3,
+    marginBottom: 4,
   },
   onTrackLabel: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '700',
     color: '#00ff88',
-    letterSpacing: 1.5,
+    letterSpacing: 1,
   },
   drawName: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   monthsLeftRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   drawSubtitle: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#666',
   },
   benefitsIcon: {
-    marginBottom: 12,
+    marginBottom: 6,
   },
   benefitsSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 14,
+    paddingVertical: 18,
     alignItems: 'center',
   },
   benefitsTitle: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: 16,
+    lineHeight: 24,
+    marginBottom: 8,
   },
   benefitsIndicator: {
-    width: 80,
-    height: 4,
+    width: 48,
+    height: 3,
     backgroundColor: '#fff',
     borderRadius: 2,
   },
