@@ -146,6 +146,7 @@ const EMI_SCHEDULE = [
     // statusType: "overdue",
     // overdueCharges: "₹1,320.87",
   },
+  
   {
     date: "02 jun '26",
     status: "paid late",
