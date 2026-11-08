@@ -371,24 +371,64 @@ const TIMELINE_DATA = [
     balanceAfterPayment: "₹2,02,364.39",
   },
 
+
   {
     month: 18,
     date: "2nd Jul 2026",
     type: "overdue",
     amount: "₹21,949.49",
-    totalDues: "₹16,669.49",
+    totalDues: "₹17,725.49",
     charges: "₹10,560.00",
     emi: "₹11,389.49",
     waiver: {
-      rate: "50%",
-      amount: "₹5,280.00",
+      rate: "40%",
+      amount: "₹4,224.00",
       info: "Pay immediately before this offer expires. Last date: 05 Nov 2026",
     },
     emiPlan: {
       count: 3,
-      installment: "₹5,556.50",
+      installment: "₹6,260.50",
     },
   },
+
+
+  // {
+  //   month: 18,
+  //   date: "2nd Jul 2026",
+  //   type: "overdue",
+  //   amount: "₹21,949.49",
+  //   totalDues: "₹18,781.49",
+  //   charges: "₹10,560.00",
+  //   emi: "₹11,389.49",
+  //   waiver: {
+  //     rate: "30%",
+  //     amount: "₹3,168.00",
+  //     info: "Pay immediately before this offer expires. Last date: 05 Nov 2026",
+  //   },
+  //   emiPlan: {
+  //     count: 3,
+  //     installment: "₹6,260.50",
+  //   },
+  // },
+
+  // {
+  //   month: 18,
+  //   date: "2nd Jul 2026",
+  //   type: "overdue",
+  //   amount: "₹21,949.49",
+  //   totalDues: "₹16,669.49",
+  //   charges: "₹10,560.00",
+  //   emi: "₹11,389.49",
+  //   waiver: {
+  //     rate: "50%",
+  //     amount: "₹5,280.00",
+  //     info: "Pay immediately before this offer expires. Last date: 05 Nov 2026",
+  //   },
+  //   emiPlan: {
+  //     count: 3,
+  //     installment: "₹5,556.50",
+  //   },
+  // },
 
   {
     month: 17,
@@ -755,38 +795,38 @@ const PaytmLoanScreen = ({ navigation }) => {
       )}
       {(item.totalDues != null || item.amount != null) &&
         item.balanceAfterPayment == null && (
-        <View
-          style={[
-            styles.totalDuesRow,
-            item.waiver != null && styles.totalDuesRowCompact,
-          ]}
-        >
-          <View style={styles.repaymentLabelRow}>
-            <MaterialCommunityIcons
-              name="cash"
-              size={item.waiver != null ? 12 : 14}
-              color="#333"
-            />
+          <View
+            style={[
+              styles.totalDuesRow,
+              item.waiver != null && styles.totalDuesRowCompact,
+            ]}
+          >
+            <View style={styles.repaymentLabelRow}>
+              <MaterialCommunityIcons
+                name="cash"
+                size={item.waiver != null ? 12 : 14}
+                color="#333"
+              />
+              <Text
+                style={[
+                  styles.totalDuesLabel,
+                  item.waiver != null && styles.totalDuesLabelCompact,
+                ]}
+              >
+                Total Dues Remaining
+              </Text>
+            </View>
             <Text
               style={[
-                styles.totalDuesLabel,
-                item.waiver != null && styles.totalDuesLabelCompact,
+                styles.totalDuesAmount,
+                item.waiver != null && styles.totalDuesAmountCompact,
               ]}
+              numberOfLines={1}
             >
-              Total Dues Remaining
+              {item.totalDues ?? item.amount}
             </Text>
           </View>
-          <Text
-            style={[
-              styles.totalDuesAmount,
-              item.waiver != null && styles.totalDuesAmountCompact,
-            ]}
-            numberOfLines={1}
-          >
-            {item.totalDues ?? item.amount}
-          </Text>
-        </View>
-      )}
+        )}
       {item.emiPlan != null && (
         <View style={styles.payPlanBlock}>
           <Text style={styles.payPlanTitle}>CHOOSE PAYMENT OPTION</Text>
@@ -1104,7 +1144,7 @@ const PaytmLoanScreen = ({ navigation }) => {
               Loan A/C No. MFLPAYTMFOLOQ005526923
             </Text>
           </View>
-          <TouchableOpacity style={styles.loanDetailsLink} onPress={() => {}} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.loanDetailsLink} onPress={() => { }} activeOpacity={0.8}>
             <Text style={styles.loanDetailsLinkText}>Loan details</Text>
             <Ionicons name="chevron-forward" size={16} color="#007aff" />
           </TouchableOpacity>
@@ -1123,7 +1163,7 @@ const PaytmLoanScreen = ({ navigation }) => {
             </View>
             <TouchableOpacity
               style={styles.payMoreButton}
-              onPress={() => {}}
+              onPress={() => { }}
               activeOpacity={0.8}
             >
               <Ionicons name="cash-outline" size={16} color="#fff" />

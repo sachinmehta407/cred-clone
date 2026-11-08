@@ -129,14 +129,14 @@ const EMI_SCHEDULE = [
   {
     date: "02 mar '26",
     statusType: "overdue",
-    overdueCharges: "₹10,200.60",
-    amount: "₹15,321.60",
+    overdueCharges: "₹11,040.60",
+    amount: "₹16,161.60",
   },
   {
     date: "02 apr '26",
     statusType: "overdue",
-    overdueCharges: "₹9,000.87",
-    amount: "₹14,121.87",
+    overdueCharges: "₹9,800.87",
+    amount: "₹14,921.87",
   },
   {
     date: "02 may '26",
